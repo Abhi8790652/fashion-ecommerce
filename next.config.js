@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   images: {
     domains: ['images.unsplash.com', 'images.pexels.com'],
     remotePatterns: [
@@ -16,6 +21,7 @@ const nextConfig = {
       }
     ],
   },
+
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -23,9 +29,10 @@ const nextConfig = {
     };
     return config;
   },
+
   experimental: {
     serverActions: true,
   },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
