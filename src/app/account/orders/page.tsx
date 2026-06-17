@@ -2,21 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
 import { orderStorage, Order } from '@/utils/orderStorage'
 
 export default function OrdersPage() {
   const { user, isLoggedIn } = useAuth()
-  const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/login')
-      return
-    }
+    // Wait until auth state is known and user is logged in before loading orders
+    if (!isLoggedIn) return
 
     try {
       const storedOrders = orderStorage.getOrders()
@@ -27,11 +23,11 @@ export default function OrdersPage() {
     } finally {
       setLoading(false)
     }
-  }, [isLoggedIn, router])
+  }, [isLoggedIn])
 
-  if (!isLoggedIn) {
-    return null
-  }
+  // If user is not logged in, the parent layout will redirect to `/login`.
+  // Show nothing here while auth state stabilizes.
+  if (!isLoggedIn) return null
 
   if (loading) {
     return (

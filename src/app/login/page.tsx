@@ -10,7 +10,11 @@ import Image from 'next/image'
 
 // Validate environment variables
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '862491648968-8g6ildrhaqsc1qjhu3oekdrli6fjol9k.apps.googleusercontent.com'
-const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || 'your_facebook_app_id_here'
+const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || ''
+
+if (!FACEBOOK_APP_ID) {
+  console.warn('Warning: NEXT_PUBLIC_FACEBOOK_APP_ID is not set. Facebook login will not work. Set it in your .env.local file.')
+}
 
 export default function LoginPage() {
   const router = useRouter()

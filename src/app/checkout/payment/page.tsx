@@ -6,6 +6,7 @@ import { FaMoneyBillWave, FaQrcode, FaArrowLeft, FaInfoCircle, FaCreditCard, FaE
 import { useCart, CartItem } from '@/contexts/CartContext'
 import { useAuth, User } from '@/contexts/AuthContext'
 import { orderStorage, Order } from '@/utils/orderStorage'
+import { rewardStorage } from '@/utils/rewardStorage'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -28,6 +29,9 @@ export default function PaymentPage() {
   const [expiryDate, setExpiryDate] = useState('')
   const [cvv, setCvv] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [availableRewards, setAvailableRewards] = useState(0)
+  const [applyRewards, setApplyRewards] = useState(false)
+  const [appliedPoints, setAppliedPoints] = useState(0)
   const [orderProgress, setOrderProgress] = useState(0)
   const [showOrderProcessing, setShowOrderProcessing] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -42,6 +46,12 @@ export default function PaymentPage() {
   useEffect(() => {
     if (!user) {
       router.push('/login?redirect=/checkout/payment')
+    }
+    if (user && user.email) {
+      const points = rewardStorage.getReward(user.email)
+      setAvailableRewards(points)
+      setAppliedPoints(0)
+      setApplyRewards(false)
     }
   }, [user, router])
 
@@ -94,12 +104,15 @@ export default function PaymentPage() {
         setOrderProgress(i)
       }
 
+      // Calculate final total after applying rewards
+      const finalTotal = Math.max(0, total - (applyRewards ? appliedPoints : 0))
+
       // Create order data
       const newOrderNumber = `ORD-${Date.now()}`
       const orderData: Order = {
         id: newOrderNumber,
         items: cartItems.map(item => ({...item, id: String(item.id)})),
-        total: total,
+        total: finalTotal,
         customer: {
           name: user?.name || '',
           email: user?.email || '',
@@ -115,11 +128,32 @@ export default function PaymentPage() {
       // Save order to localStorage
       orderStorage.addOrder(orderData)
 
+      // If rewards were applied, deduct them from user's balance
+      if (applyRewards && appliedPoints > 0 && user && user.email) {
+        rewardStorage.useReward(user.email, appliedPoints)
+      }
+
+      // Award new reward points: 1 point per ₹100 spent (after discounts)
+      if (user && user.email) {
+        const pointsEarned = Math.floor(finalTotal / 100)
+        if (pointsEarned > 0) {
+          rewardStorage.addReward(user.email, pointsEarned)
+        }
+      }
+
       // Redirect to confirmation page immediately
       router.push(`/checkout/confirmation?orderId=${newOrderNumber}`)
 
       // Clear cart after successful order
       clearCart()
+
+      // Update UI rewards state
+      if (user && user.email) {
+        const updated = rewardStorage.getReward(user.email)
+        setAvailableRewards(updated)
+        setAppliedPoints(0)
+        setApplyRewards(false)
+      }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -212,6 +246,33 @@ export default function PaymentPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
               </div>
               <div className="p-6">
+                {availableRewards > 0 && (
+                  <div className="mb-4 rounded border bg-gray-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">Reward Balance</p>
+                        <p className="font-medium text-gray-900">{availableRewards} points (₹{availableRewards})</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" checked={applyRewards} onChange={(e) => setApplyRewards(e.target.checked)} />
+                          <span className="text-sm text-gray-700">Apply rewards</span>
+                        </label>
+                        {applyRewards && (
+                          <input
+                            type="number"
+                            min={0}
+                            max={Math.min(availableRewards, Math.floor(total))}
+                            value={appliedPoints}
+                            onChange={(e) => setAppliedPoints(Math.max(0, Math.min(Number(e.target.value || 0), Math.min(availableRewards, Math.floor(total)))))}
+                            className="w-24 rounded border px-2 py-1 text-sm"
+                            aria-label="Applied reward points"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {cartItems.map((item, index) => (
                   <motion.div
                     key={item.id}
@@ -243,7 +304,7 @@ export default function PaymentPage() {
                 <div className="mt-4 border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between">
                     <p className="text-lg font-semibold text-gray-900">Total</p>
-                    <p className="text-lg font-semibold text-accent">₹{total.toFixed(2)}</p>
+                    <p className="text-lg font-semibold text-accent">₹{(Math.max(0, total - (applyRewards ? appliedPoints : 0))).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
