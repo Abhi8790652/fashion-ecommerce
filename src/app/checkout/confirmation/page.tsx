@@ -306,7 +306,7 @@ export default function ConfirmationPage() {
               <p className="text-gray-600">{orderDetails.customer.name}</p>
               <p className="text-gray-600">{orderDetails.customer.email}</p>
               {orderDetails.customer.paymentMethod === 'card' && (
-                <p className="text-gray-600">••••••••{orderDetails.paymentDetails?.last4 || '----'}</p>
+                <p className="text-gray-600">•••• •••• •••• ----</p>
               )}
               {orderDetails.customer.paymentMethod === 'upi' && orderDetails.customer.upiId && (
                 <p className="text-gray-600">UPI ID: {orderDetails.customer.upiId}</p>
