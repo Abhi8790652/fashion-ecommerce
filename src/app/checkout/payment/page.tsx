@@ -8,10 +8,7 @@ import { useAuth, User } from '@/contexts/AuthContext'
 import { orderStorage, Order } from '@/utils/orderStorage'
 import Link from 'next/link'
 import Image from 'next/image'
-import dynamic from 'next/dynamic'
-
-const motion = dynamic(() => import('framer-motion').then(mod => mod.motion), { ssr: false })
-const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false })
+import { motion, AnimatePresence } from 'framer-motion'
 
 type PaymentMethod = 'cod' | 'upi' | 'card'
 
