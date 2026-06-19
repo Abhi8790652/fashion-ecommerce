@@ -38,7 +38,7 @@ export const products: Product[] = [
     id: 1,
     name: 'Summer Dress',
     description: 'A beautiful summer dress perfect for sunny days. Made with lightweight, breathable fabric that keeps you cool and comfortable all day long.',
-    price: 7499,
+    price: 1,
     category: 'women',
     subcategory: 'dresses',
     sizes: [

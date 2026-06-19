@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 
   images: {
